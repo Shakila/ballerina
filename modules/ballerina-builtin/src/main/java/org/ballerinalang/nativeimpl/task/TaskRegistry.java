@@ -18,6 +18,7 @@
  */
 package org.ballerinalang.nativeimpl.task;
 
+import org.ballerinalang.nativeimpl.task.appointment.Appointment;
 import org.ballerinalang.nativeimpl.task.timer.Timer;
 
 import java.util.HashMap;
@@ -30,6 +31,7 @@ public class TaskRegistry {
 
     private static TaskRegistry instance = new TaskRegistry();
     private Map<String, Timer> timers = new HashMap<>();
+    private Map<String, Appointment> appointments = new HashMap<>();
 
     public static TaskRegistry getInstance() {
         return instance;
@@ -38,6 +40,8 @@ public class TaskRegistry {
     public void stopTask(String taskId) throws Exception {
         if (timers.containsKey(taskId)) {
             timers.get(taskId).stop();
+        } else if (appointments.containsKey(taskId)) {
+            appointments.get(taskId).stop();
         }
     }
 
@@ -48,9 +52,35 @@ public class TaskRegistry {
         timers.put(timer.getId(), timer);
     }
 
+    public Appointment getAppointment(String taskId) {
+        if (!appointments.containsKey(taskId)) {
+            throw new IllegalArgumentException("Appointment with ID " + taskId + " does not exist");
+        }
+        return appointments.get(taskId);
+    }
+
+    public void addAppointment(Appointment appointment) {
+        if (appointments.containsKey(appointment.getId())) {
+            throw new IllegalArgumentException("Appointment with ID " + appointment.getId() + " already exists");
+        }
+        appointments.put(appointment.getId(), appointment);
+    }
+
     public void remove(String taskId) {
         if (timers.containsKey(taskId)) {
             timers.remove(taskId);
+        } else if (appointments.containsKey(taskId)) {
+            appointments.remove(taskId);
         }
+    }
+
+    /**
+     * Returns the life time of the task if it is defined.
+     *
+     * @param taskId The identifier of the task.
+     * @return The numeric value.
+     */
+    public long getExecutionLifeTime(String taskId) {
+        return getAppointment(taskId).getLifeTime();
     }
 }
